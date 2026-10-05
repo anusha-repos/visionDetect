@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO Vision AI &bull; Deep Learning Object Detection with OpenCV</title>
+    <meta name="description" content="State-of-the-art YOLOv3 object detection running locally with OpenCV DNN, supporting 80 COCO classes, image upload, live webcam streaming, and real-time interactive analytics.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=sky-blue">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+</head>
+<body>
+    <div class="app-background">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+        <div class="glow-orb orb-3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-logo">
+                    <span class="logo-crosshair"></span>
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M2 12h20M7 7l10 10M17 7L7 17" stroke-dasharray="2 2" stroke-opacity="0.4"/>
+                        <circle cx="12" cy="12" r="7" stroke-width="2"/>
+                        <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-title">
+                        <h1>YOLO VISION AI</h1>
+                        <span class="version-badge">v3.0</span>
+                    </div>
+                    <p class="brand-subtitle">OpenCV Deep Neural Network &bull; COCO 80-Class Detection</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="system-status" id="system-status">
+                    <span class="status-dot"></span>
+                    <span class="status-label">Localhost &bull; Ready</span>
+                </div>
+                <button class="btn btn-ghost btn-sm" id="btn-info-modal" title="About Model & Architecture">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 16v-4M12 8h.01"/>
+                    </svg>
+                    <span>Architecture</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Layout -->
+    <main class="main-layout">
+        <!-- Left Sidebar: Controls & Inputs -->
+        <aside class="sidebar-panel">
+            <!-- Source Selector Card -->
+            <section class="card input-source-card">
+                <div class="card-header">
+                    <div class="card-header-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <path d="M21 15l-5-5L5 21"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2>Input Source</h2>
+                        <span class="card-subtitle">Select or upload media for analysis</span>
+                    </div>
+                </div>
+
+                <!-- Input Tabs -->
+                <nav class="source-tabs" role="tablist">
+                    <button class="tab-btn active" id="tab-samples" role="tab" data-target="panel-samples">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        <span>Samples</span>
+                    </button>
+                    <button class="tab-btn" id="tab-upload" role="tab" data-target="panel-upload">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                        <span>Upload</span>
+                    </button>
+                    <button class="tab-btn" id="tab-webcam" role="tab" data-target="panel-webcam">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                        <span>Webcam</span>
+                    </button>
+                    <button class="tab-btn" id="tab-url" role="tab" data-target="panel-url">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        <span>URL</span>
+                    </button>
+                </nav>
+
+                <!-- Tab Panel 1: Samples Gallery -->
+                <div class="tab-content active" id="panel-samples">
+                    <p class="tab-description">Instant test images pre-bundled with repository:</p>
+                    <div class="samples-grid">
+                        <div class="sample-card active" data-sample="dog.jpg" id="sample-dog">
+                            <div class="sample-thumbnail-wrapper">
+                                <img src="/static/samples/dog.jpg" alt="Dog, Bike and Truck" class="sample-thumbnail">
+                                <span class="sample-badge">Benchmark</span>
+                            </div>
+                            <div class="sample-info">
+                                <strong class="sample-title">Dog, Bike & Truck</strong>
+                                <span class="sample-tags">dog &bull; bicycle &bull; truck</span>
+                            </div>
+                        </div>
+                        <div class="sample-card" data-sample="cat-raising-paw.webp" id="sample-cat">
+                            <div class="sample-thumbnail-wrapper">
+                                <img src="/static/samples/cat-raising-paw.webp" alt="Cat Raising Paw" class="sample-thumbnail">
+                                <span class="sample-badge">Wildlife</span>
+                            </div>
+                            <div class="sample-info">
+                                <strong class="sample-title">Cat Raising Paw</strong>
+                                <span class="sample-tags">cat</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Panel 2: File Upload -->
+                <div class="tab-content" id="panel-upload">
+                    <div class="dropzone" id="dropzone">
+                        <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/bmp" hidden>
+                        <div class="dropzone-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="40" height="40">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="12" y1="18" x2="12" y2="12"/>
+                                <line x1="9" y1="15" x2="12" y2="12"/>
+                                <line x1="15" y1="15" x2="12" y2="12"/>
+                            </svg>
+                        </div>
+                        <p class="dropzone-primary-text">Drag & drop your image here</p>
+                        <p class="dropzone-secondary-text">or <span class="text-accent">browse from device</span></p>
+                        <span class="file-spec">Supports JPG, PNG, WEBP &bull; Max 32MB</span>
+                    </div>
+                    <div class="file-preview-card" id="file-preview-card" style="display: none;">
+                        <img id="file-preview-img" src="" alt="File preview">
+                        <div class="file-preview-meta">
+                            <span id="file-preview-name">image.jpg</span>
+                            <span id="file-preview-size">0 KB</span>
+                        </div>
+                        <button class="btn btn-icon btn-ghost btn-sm" id="btn-remove-file" title="Remove file">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Panel 3: Live Webcam -->
+                <div class="tab-content" id="panel-webcam">
+                    <div class="webcam-viewport-wrapper">
+                        <video id="webcam-video" autoplay playsinline muted></video>
+                        <canvas id="webcam-canvas" style="display: none;"></canvas>
+                        <div class="webcam-placeholder" id="webcam-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                                <path d="M23 7l-7 5 7 5V7z"/>
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                            </svg>
+                            <p>Camera is currently inactive</p>
+                            <button class="btn btn-secondary btn-sm" id="btn-start-camera">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <polygon points="5 3 19 12 5 21 5 3"/>
+                                </svg>
+                                <span>Turn On Camera</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="webcam-controls" id="webcam-controls" style="display: none;">
+                        <button class="btn btn-primary btn-sm" id="btn-webcam-snap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                            </svg>
+                            <span>Capture Frame</span>
+                        </button>
+                        <button class="btn btn-secondary btn-sm" id="btn-toggle-live">
+                            <span class="live-indicator"></span>
+                            <span id="live-text">Continuous Detect</span>
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="btn-stop-camera" title="Turn off webcam">
+                            Stop
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Panel 4: Image URL -->
+                <div class="tab-content" id="panel-url">
+                    <div class="url-input-group">
+                        <input type="url" id="image-url-input" placeholder="https://example.com/photo.jpg" class="text-input">
+                        <button class="btn btn-secondary" id="btn-fetch-url">
+                            <span>Load</span>
+                        </button>
+                    </div>
+                    <span class="file-spec">Paste direct image link (CORS enabled)</span>
+                </div>
+            </section>
+
+            <!-- Hyperparameters & Tuning Card -->
+            <section class="card settings-card">
+                <div class="card-header">
+                    <div class="card-header-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                            <line x1="4" y1="21" x2="4" y2="14"/>
+                            <line x1="4" y1="10" x2="4" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12" y2="3"/>
+                            <line x1="20" y1="21" x2="20" y2="16"/>
+                            <line x1="20" y1="12" x2="20" y2="3"/>
+                            <line x1="1" y1="14" x2="7" y2="14"/>
+                            <line x1="9" y1="8" x2="15" y2="8"/>
+                            <line x1="17" y1="16" x2="23" y2="16"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2>Model Parameters</h2>
+                        <span class="card-subtitle">Tune inference sensitivities</span>
+                    </div>
+                </div>
+
+                <!-- Slider 1: Confidence Threshold -->
+                <div class="setting-item">
+                    <div class="setting-label-row">
+                        <label for="conf-slider">Confidence Threshold</label>
+                        <span class="setting-value" id="conf-val">50%</span>
+                    </div>
+                    <input type="range" id="conf-slider" min="10" max="95" step="1" value="50" class="range-slider">
+                    <span class="setting-hint">Minimum confidence required to count as valid detection</span>
+                </div>
+
+                <!-- Slider 2: NMS IOU Threshold -->
+                <div class="setting-item">
+                    <div class="setting-label-row">
+                        <label for="nms-slider">NMS IOU Threshold</label>
+                        <span class="setting-value" id="nms-val">0.40</span>
+                    </div>
+                    <input type="range" id="nms-slider" min="10" max="90" step="5" value="40" class="range-slider">
+                    <span class="setting-hint">Non-Maximum Suppression threshold to merge overlapping boxes</span>
+                </div>
+
+                <!-- Resolution Selector -->
+                <div class="setting-item">
+                    <label>Inference Resolution</label>
+                    <div class="resolution-options">
+                        <button class="res-btn" data-res="320" title="Faster processing, ideal for video">
+                            <span class="res-val">320 &times; 320</span>
+                            <span class="res-sub">Fast</span>
+                        </button>
+                        <button class="res-btn active" data-res="416" title="Balanced speed and accuracy">
+                            <span class="res-val">416 &times; 416</span>
+                            <span class="res-sub">Balanced</span>
+                        </button>
+                        <button class="res-btn" data-res="608" title="Highest accuracy, more CPU load">
+                            <span class="res-val">608 &times; 608</span>
+                            <span class="res-sub">Precision</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Category / Class Filter -->
+                <div class="setting-item">
+                    <div class="setting-label-row">
+                        <label for="category-filter">Category Filter</label>
+                        <span class="setting-value" id="filter-status">All (80)</span>
+                    </div>
+                    <select id="category-filter" class="select-input">
+                        <option value="all">Detect All 80 Classes</option>
+                        <option value="Animals">Animals only (dog, cat, bird...)</option>
+                        <option value="Vehicles">Vehicles only (car, bike, truck...)</option>
+                        <option value="People">People only (person)</option>
+                        <option value="Electronics">Electronics only (tv, laptop, phone...)</option>
+                        <option value="Food">Food only (sandwich, apple, pizza...)</option>
+                        <option value="Sports">Sports &amp; Accessories</option>
+                    </select>
+                </div>
+
+                <!-- Action Primary Button -->
+                <div class="action-footer">
+                    <button class="btn btn-primary btn-block btn-lg" id="btn-detect">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polygon points="10 8 16 12 10 16 10 8"/>
+                        </svg>
+                        <span class="btn-text">Run YOLO Detection</span>
+                    </button>
+                </div>
+            </section>
+        </aside>
+
+        <!-- Main Center & Right: Results, Viewer & Analytics -->
+        <section class="display-panel">
+            <!-- Viewer Toolbar & Controls -->
+            <div class="viewer-toolbar card">
+                <div class="view-modes" role="tablist">
+                    <button class="view-mode-btn active" data-mode="annotated" id="mode-annotated" title="Rendered bounding boxes & tags">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h10v10H7z"/></svg>
+                        <span>Annotated</span>
+                    </button>
+                    <button class="view-mode-btn" data-mode="interactive" id="mode-interactive" title="Dynamic clickable HUD boxes">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg>
+                        <span>Interactive HUD</span>
+                    </button>
+                    <button class="view-mode-btn" data-mode="compare" id="mode-compare" title="Split slider comparing Original vs Detected">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="2" x2="12" y2="22"/><rect x="2" y="2" width="20" height="20" rx="2"/></svg>
+                        <span>Compare Slider</span>
+                    </button>
+                    <button class="view-mode-btn" data-mode="original" id="mode-original" title="Clean original image">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                        <span>Original</span>
+                    </button>
+                </div>
+
+                <div class="toolbar-actions">
+                    <button class="btn btn-secondary btn-sm" id="btn-export-json" title="Export detection objects JSON">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        <span>JSON</span>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="btn-download-img" title="Download annotated image">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        <span>Download</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Viewport Stage -->
+            <div class="viewport-stage card" id="viewport-stage">
+                <!-- Radar scanning overlay during inference -->
+                <div class="scan-overlay" id="scan-overlay">
+                    <div class="scan-line"></div>
+                    <div class="scan-status-pill">
+                        <div class="spinner"></div>
+                        <span>Processing YOLOv3 DNN Inference...</span>
+                    </div>
+                </div>
+
+                <!-- Empty State before any image is loaded -->
+                <div class="viewport-empty" id="viewport-empty" style="display: none;">
+                    <div class="empty-icon-ring">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                    </div>
+                    <h3>No Image Loaded</h3>
+                    <p>Select a sample from the sidebar or upload your own image to detect objects.</p>
+                </div>
+
+                <!-- Stage Container -->
+                <div class="stage-container" id="stage-container">
+                    <!-- Standard Annotated View -->
+                    <div class="view-layer" id="layer-annotated">
+                        <img id="img-annotated" src="/static/samples/dog.jpg" alt="Annotated detection output">
+                    </div>
+
+                    <!-- Interactive HUD View with dynamic overlay tags -->
+                    <div class="view-layer" id="layer-interactive" style="display: none;">
+                        <div class="interactive-wrapper" id="interactive-wrapper">
+                            <img id="img-interactive-base" src="/static/samples/dog.jpg" alt="Interactive Detection Base">
+                            <div class="hud-boxes-container" id="hud-boxes-container"></div>
+                        </div>
+                    </div>
+
+                    <!-- Compare Split Slider View -->
+                    <div class="view-layer" id="layer-compare" style="display: none;">
+                        <div class="compare-container" id="compare-container">
+                            <img id="compare-img-after" src="/static/samples/dog.jpg" alt="Annotated after">
+                            <div class="compare-before-layer" id="compare-before-layer">
+                                <img id="compare-img-before" src="/static/samples/dog.jpg" alt="Original before">
+                            </div>
+                            <div class="compare-handle" id="compare-handle">
+                                <div class="handle-line"></div>
+                                <div class="handle-thumb">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+                                        <polyline points="15 18 9 12 15 6"/>
+                                    </svg>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+                                        <polyline points="9 18 15 12 9 6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="compare-badge badge-left">Original</span>
+                            <span class="compare-badge badge-right">Detected</span>
+                        </div>
+                    </div>
+
+                    <!-- Original View -->
+                    <div class="view-layer" id="layer-original" style="display: none;">
+                        <img id="img-original" src="/static/samples/dog.jpg" alt="Original input image">
+                    </div>
+                </div>
+
+                <!-- Image Metadata Footer -->
+                <div class="stage-meta-strip">
+                    <span id="meta-filename">dog.jpg</span>
+                    <span class="dot-separator">&bull;</span>
+                    <span id="meta-dimensions">768 &times; 576 px</span>
+                    <span class="dot-separator">&bull;</span>
+                    <span id="meta-detected-summary">Ready to run detection</span>
+                </div>
+            </div>
+
+            <!-- Analytics & Detections Deck -->
+            <div class="analytics-deck">
+                <!-- Metrics Bar -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon metric-purple">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <div class="metric-details">
+                            <span class="metric-title">Inference Time</span>
+                            <strong class="metric-val" id="metric-time">-- ms</strong>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon metric-cyan">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 2v20M2 12h20"/>
+                            </svg>
+                        </div>
+                        <div class="metric-details">
+                            <span class="metric-title">Total Detected</span>
+                            <strong class="metric-val" id="metric-count">--</strong>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon metric-emerald">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                                <line x1="7" y1="7" x2="7.01" y2="7"/>
+                            </svg>
+                        </div>
+                        <div class="metric-details">
+                            <span class="metric-title">Distinct Classes</span>
+                            <strong class="metric-val" id="metric-classes">--</strong>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon metric-amber">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                        </div>
+                        <div class="metric-details">
+                            <span class="metric-title">DNN Input Grid</span>
+                            <strong class="metric-val" id="metric-grid">416 &times; 416</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detected Objects Table / Card List -->
+                <div class="card objects-list-card">
+                    <div class="card-header">
+                        <div class="card-header-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                <line x1="8" y1="6" x2="21" y2="6"/>
+                                <line x1="8" y1="12" x2="21" y2="12"/>
+                                <line x1="8" y1="18" x2="21" y2="18"/>
+                                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                                <line x1="3" y1="18" x2="3.01" y2="18"/>
+                            </svg>
+                        </div>
+                        <div class="card-header-title-wrap">
+                            <h2>Detected Objects Inspector</h2>
+                            <span class="card-subtitle">Hover or click any detected item to spotlight on image</span>
+                        </div>
+                        <div class="category-summary-tags" id="category-summary-tags"></div>
+                    </div>
+
+                    <div class="detected-items-container" id="detected-items-container">
+                        <div class="empty-items-notice" id="empty-items-notice">
+                            <span>Click "Run YOLO Detection" to analyze the current image</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Architecture & Model Modal -->
+    <div class="modal-backdrop" id="info-modal" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h3>YOLOv3 Architecture &amp; System Specs</h3>
+                    <span class="modal-subtitle">OpenCV DNN &bull; Darknet Framework</span>
+                </div>
+                <button class="btn btn-icon btn-ghost" id="btn-close-modal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="tech-spec-grid">
+                    <div class="tech-spec-item">
+                        <span class="spec-label">Model Architecture</span>
+                        <strong class="spec-value">Darknet-53 (106 layers)</strong>
+                    </div>
+                    <div class="tech-spec-item">
+                        <span class="spec-label">Detection Method</span>
+                        <strong class="spec-value">Multi-scale Anchor Boxes (3 scales)</strong>
+                    </div>
+                    <div class="tech-spec-item">
+                        <span class="spec-label">Dataset</span>
+                        <strong class="spec-value">MS COCO (80 object categories)</strong>
+                    </div>
+                    <div class="tech-spec-item">
+                        <span class="spec-label">OpenCV Engine</span>
+                        <strong class="spec-value" id="modal-opencv-ver">OpenCV 4.x DNN</strong>
+                    </div>
+                    <div class="tech-spec-item">
+                        <span class="spec-label">Execution Target</span>
+                        <strong class="spec-value">CPU (Optimized SIMD / AVX2)</strong>
+                    </div>
+                    <div class="tech-spec-item">
+                        <span class="spec-label">Weights File</span>
+                        <strong class="spec-value">yolov3.weights (248 MB)</strong>
+                    </div>
+                </div>
+                <div class="modal-info-box">
+                    <h4>How YOLOv3 Works:</h4>
+                    <p>Unlike two-stage detectors (like Faster R-CNN) that propose regions before classifying them, <strong>YOLO (You Only Look Once)</strong> frames object detection as a single regression problem. It applies a single neural network to the full image, divides it into grid cells, and directly predicts bounding box coordinates and class probabilities simultaneously at 3 different scales (13&times;13, 26&times;26, 52&times;52).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

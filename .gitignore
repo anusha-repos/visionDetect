@@ -1,0 +1,32 @@
+# YOLO weights (Exceeds GitHub 100MB file limit)
+*.weights
+yolov3.weights
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments and packages
+.env
+.venv
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Operating system artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.exe
+
+# Compressed backups
+object-detection-opencv-master
+
+# IDE settings
+.vscode/
+.idea/
